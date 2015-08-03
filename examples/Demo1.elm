@@ -1,6 +1,15 @@
 
 import Layout exposing (Layout)
+import Window
 
-view = Layout.placeholder "view"
+view =
+    Layout.top 48
+        (Layout.placeholder "header")
+        ( [1..25]
+            |> List.map (\n -> "Item " ++ (toString n))
+            |> List.map Layout.placeholder
+            |> Layout.list 32
+            |> Layout.inset 8
+        )
 
-main = Layout.toHtml {x=0,y=0,w=800,h=600} view
+main = Signal.map2 Layout.toHtml Window.dimensions (Signal.constant view)

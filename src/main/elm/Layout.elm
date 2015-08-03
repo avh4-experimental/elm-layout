@@ -7,7 +7,13 @@ module Layout
     , onClick
     , toHtml) where
 
-{-|
+{-| An experimental alternative to Graphics.Element and elm-html
+
+The concept being explored by this rendering library is to have the core element
+type be a function of `{x,y,w,h} -> rendering` instead of simply being a rendering.
+This leads to some interesting properties with respect to creating dynamic layouts,
+and thus far appears to give a nice API for quickly creating and modifying layouts.
+It also provides a mechanism for creating reusable layout logic.
 
 @docs Layout
 
@@ -72,9 +78,8 @@ This element is intended to aid in quick prototyping where you want to reserve a
 to implement at a later time.
 
     view = Layout.top 50
-        [ Layout.placeholder "header"
-        , Layout.placeholder "content"
-        ]
+        (Layout.placeholder "header")
+        (Layout.placeholder "content")
 -}
 placeholder : String -> Layout
 placeholder s =
@@ -157,7 +162,7 @@ fill c =
 --position : Float -> Float -> Float -> Float -> Layout -> Layout
 --position x y w h g =
 --    Layout <| \bounds ->
---        toHtml {x=x,y=y,w=w,h=h} g
+--        toHtml' {x=x,y=y,w=w,h=h} g
 
 {-| A container element that inserts padding around its child
 
@@ -169,21 +174,20 @@ fill c =
 inset : Float -> Layout -> Layout
 inset i g =
     Layout <| \bounds ->
-        toHtml {x=bounds.x+i,y=bounds.y+i,w=bounds.w-i-i,h=bounds.h-i-i} g
+        toHtml' {x=bounds.x+i,y=bounds.y+i,w=bounds.w-i-i,h=bounds.h-i-i} g
 
 {-| Position two elements vertically, with the first element taking a given height
 
     Layout.top 50
-        [ Layout.placeholder "header"
-        , Layout.placeholder "content"
-        ]
+        (Layout.placeholder "header")
+        (Layout.placeholder "content")
 -}
 top : Float -> Layout -> Layout -> Layout
 top ih a b =
     Layout <| \bounds ->
         div bounds [] []
-            [ toHtml {x=0,w=bounds.w,y=0,h=ih} a
-            , toHtml {x=0,w=bounds.w,y=ih,h=bounds.h-ih} b
+            [ toHtml' {x=0,w=bounds.w,y=0,h=ih} a
+            , toHtml' {x=0,w=bounds.w,y=ih,h=bounds.h-ih} b
             ]
 
 {-| An element that renders a list of children into bounds of a given size and
@@ -201,7 +205,7 @@ flow (iw,ih) items =
                 , ("height", (toString ih) ++ "px")
                 , ("display", "inline-block")
                 , ("vertical-align", "bottom")
-                ]] [toHtml {x=0,y=0,w=iw,h=ih} i]) items )
+                ]] [toHtml' {x=0,y=0,w=iw,h=ih} i]) items )
 
 {-| An element that renders a list of children on top of one another in the same bounds.
 
@@ -214,17 +218,19 @@ stack : List Layout -> Layout
 stack items =
     Layout <| \bounds ->
         items
-        |> List.map (toHtml {bounds | x <- 0, y <- 0})
+        |> List.map (toHtml' {bounds | x <- 0, y <- 0})
         |> div bounds [] []
 
-{-| An element that renders a list of children in a vertical list with a given height
+{-| An element that renders a list of children in a vertical list with a given height.
+
+The list will scroll vertically if there are enough children to exceed the vertical bounds of the list.
 
     Layout.list 44 (List.map placeholder ["Item 1", "Item 2", "Item 3"])
 -}
 list : Float -> List Layout -> Layout
 list ih items =
     Layout <| \bounds ->
-        toHtml bounds (flow (bounds.w,ih) items)
+        toHtml' bounds (flow (bounds.w,ih) items)
 
 --
 -- Events
@@ -237,18 +243,22 @@ onClick message item =
     Layout <| \bounds ->
         div bounds []
             [ Html.on "click" Json.value (\_ -> message) ]
-            [ toHtml {bounds | x <- 0, y <- 0} item ]
+            [ toHtml' {bounds | x <- 0, y <- 0} item ]
 
 --
 -- Integration
 --
 
+toHtml' : Bounds -> Layout -> Html
+toHtml' bounds g =
+    case g of
+        Layout fn -> fn bounds
+
 {-| Render a Layout to Html
 
     view = Layout.placeholder "view"
-    main = Layout.toHtml {w=800,h=600} view
+    main = Signal.map2 Layout.toHtml Window.dimensions (Signal.constant view)
 -}
-toHtml : Bounds -> Layout -> Html
-toHtml bounds g =
-    case g of
-        Layout fn -> fn bounds
+toHtml : (Int,Int) -> Layout -> Html
+toHtml (w,h) =
+    toHtml' {x=0,y=0,w=toFloat w,h=toFloat h}
