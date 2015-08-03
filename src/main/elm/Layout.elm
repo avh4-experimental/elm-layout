@@ -5,7 +5,7 @@ module Layout
     , fill
     , inset, top, flow, stack, list
     , onClick
-    , toHtml) where
+    , toHtml, toFullWindow) where
 
 {-| An experimental alternative to Graphics.Element and elm-html
 
@@ -35,7 +35,7 @@ It also provides a mechanism for creating reusable layout logic.
 
 ## Integration
 
-@docs toHtml
+@docs toHtml, toFullWindow
 
 -}
 
@@ -45,6 +45,7 @@ import Html.Events as Html
 import Json.Decode as Json
 import Color exposing (Color)
 import Color.Hash
+import Window
 
 type alias Bounds = {x:Float, y:Float, w:Float, h:Float}
 
@@ -254,11 +255,20 @@ toHtml' bounds g =
     case g of
         Layout fn -> fn bounds
 
-{-| Render a Layout to Html
+{-| Render a Layout to Html.
 
     view = Layout.placeholder "view"
-    main = Signal.map2 Layout.toHtml Window.dimensions (Signal.constant view)
+    main = Layout.toHtml (800, 600) view
 -}
 toHtml : (Int,Int) -> Layout -> Html
 toHtml (w,h) =
     toHtml' {x=0,y=0,w=toFloat w,h=toFloat h}
+
+
+{-| Simplifies rendering an element to fill the window.
+
+    view = Layout.placeholder "view"
+    main = Layout.toFullWindow (Signal.constant view)
+-}
+toFullWindow : Signal Layout -> Signal Html
+toFullWindow viewSignal = Signal.map2 toHtml Window.dimensions viewSignal

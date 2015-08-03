@@ -12,4 +12,4 @@ view =
             |> Layout.inset 8
         )
 
-main = Signal.map2 Layout.toHtml Window.dimensions (Signal.constant view)
+main = Layout.toFullWindow (Signal.constant view)
