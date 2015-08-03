@@ -1,5 +1,5 @@
 
-import Layout exposing (Layout)
+import Layout
 import Window
 
 view =
