@@ -219,7 +219,7 @@ stack : List Layout -> Layout
 stack items =
     Layout <| \bounds ->
         items
-        |> List.map (toHtml' {bounds | x <- 0, y <- 0})
+        |> List.map (toHtml' {bounds | x = 0, y = 0})
         |> div bounds [] []
 
 {-| An element that renders a list of children in a vertical list with a given height.
@@ -244,7 +244,7 @@ onClick message item =
     Layout <| \bounds ->
         div bounds []
             [ Html.on "click" Json.value (\_ -> message) ]
-            [ toHtml' {bounds | x <- 0, y <- 0} item ]
+            [ toHtml' {bounds | x = 0, y = 0} item ]
 
 --
 -- Integration
