@@ -14,4 +14,4 @@ type alias RectangularBounds =
 
 html : (RectangularBounds -> Html) -> Layout RectangularBounds
 html render =
-    Core.VirtualDom render
+    Core.custom render

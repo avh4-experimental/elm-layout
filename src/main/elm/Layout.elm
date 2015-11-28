@@ -1,4 +1,4 @@
-module Layout (Layout, text, placeholder, image, croppedImage, fill, inset, top, square, flow, stack, list, onClick, toHtml, toFullWindow) where
+module Layout (Layout, text, placeholder, image, croppedImage, svg, fill, inset, top, square, flow, stack, list, onClick, toHtml, toFullWindow) where
 
 {-| An experimental alternative to Graphics.Element and elm-html
 
@@ -12,11 +12,11 @@ It also provides a mechanism for creating reusable layout logic.
 
 ## Basic elements
 
-@docs placeholder, text, image, croppedImage, fill
+@docs placeholder, text, image, croppedImage, svg, fill
 
 ## Positioning
 
-@docs inset, top
+@docs inset, top, square
 
 ## Lists
 
@@ -32,15 +32,17 @@ It also provides a mechanism for creating reusable layout logic.
 
 -}
 
+import Color exposing (Color)
+import Color.Hash
 import Html exposing (Html)
 import Html.Attributes as Html
 import Html.Events as Html
 import Json.Decode as Json
-import Color exposing (Color)
-import Color.Hash
-import Window
 import Layout.Custom as Custom
 import Layout.Core as Core
+import Svg exposing (Svg)
+import Svg.Attributes as Svg
+import Window
 
 
 type alias Image =
@@ -163,6 +165,30 @@ croppedImage sw sh src iw ih ix iy =
                     []
                     []
                     bounds
+
+
+{-| An element displaying an SVG node
+-}
+svg : RectangularBounds -> Svg -> Layout
+svg viewBox child =
+    Custom.html
+        <| div
+            []
+            []
+            [ Svg.svg
+                [ Svg.version "1.1"
+                , Svg.viewBox
+                    (toString viewBox.x
+                        ++ " "
+                        ++ toString viewBox.y
+                        ++ " "
+                        ++ toString viewBox.w
+                        ++ " "
+                        ++ toString viewBox.h
+                    )
+                ]
+                [ child ]
+            ]
 
 
 

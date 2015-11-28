@@ -1,4 +1,4 @@
-module Layout.Core (Layout(..), mapBounds, toHtml) where
+module Layout.Core (Layout, mapBounds, custom, toHtml) where
 
 {-| This module defines the basic types that layouts are built from.
 
@@ -16,6 +16,11 @@ mapBounds fn l =
     case l of
         VirtualDom render ->
             VirtualDom (fn >> render)
+
+
+custom : (bounds -> Html) -> Layout bounds
+custom render =
+    VirtualDom render
 
 
 toHtml : bounds -> Layout bounds -> Html
