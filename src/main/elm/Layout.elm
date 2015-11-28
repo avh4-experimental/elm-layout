@@ -39,20 +39,22 @@ import Json.Decode as Json
 import Color exposing (Color)
 import Color.Hash
 import Window
-
-
-type alias Bounds =
-    { x : Float, y : Float, w : Float, h : Float }
+import Layout.Custom as Custom
+import Layout.Core as Core
 
 
 type alias Image =
     String
 
 
+type alias RectangularBounds =
+    Custom.RectangularBounds
+
+
 {-| A graphical element that will be rendered into a particular bounds at a later time.
 -}
-type Layout
-    = Layout (Bounds -> Html)
+type alias Layout =
+    Core.Layout RectangularBounds
 
 
 colorToString c =
@@ -62,22 +64,23 @@ colorToString c =
         "rgb(" ++ (toString red) ++ ", " ++ (toString green) ++ ", " ++ (toString blue) ++ ")"
 
 
-div : Bounds -> List ( String, String ) -> List Html.Attribute -> List Html -> Html
-div { x, y, w, h } styles attrs children =
-    Html.div
-        ((Html.style
-            ([ ( "position", "absolute" )
-             , ( "width", (toString w) ++ "px" )
-             , ( "height", (toString h) ++ "px" )
-             , ( "top", (toString y) ++ "px" )
-             , ( "left", (toString x) ++ "px" )
-             ]
+div styles attrs children { x, w, y, h } =
+    let
+        styles' =
+            [ ( "position", "absolute" )
+            , ( "width", (toString w) ++ "px" )
+            , ( "height", (toString h) ++ "px" )
+            , ( "top", (toString y) ++ "px" )
+            , ( "left", (toString x) ++ "px" )
+            ]
                 ++ styles
-            )
-         )
-            :: attrs
-        )
-        children
+
+        attrs' =
+            [ Html.style styles'
+            ]
+                ++ attrs
+    in
+        Html.div attrs' children
 
 
 {-| An element intended to be a placeholder for something that will be implemented at
@@ -105,16 +108,14 @@ placeholder s =
 -}
 text : { size : Int, color : Color } -> String -> Layout
 text style s =
-    Layout
-        <| \bounds ->
-            div
-                bounds
-                [ ( "overflow", "auto" )
-                , ( "font-size", (toString style.size) ++ "px" )
-                , ( "color", colorToString style.color )
-                ]
-                []
-                [ Html.text s ]
+    Custom.html
+        <| div
+            [ ( "overflow", "auto" )
+            , ( "font-size", (toString style.size) ++ "px" )
+            , ( "color", colorToString style.color )
+            ]
+            []
+            [ Html.text s ]
 
 
 {-| An element that renders an image.
@@ -123,17 +124,16 @@ text style s =
 -}
 image : Image -> Layout
 image src =
-    Layout
-        <| \bounds ->
-            let
-                background = "url(" ++ src ++ ")"
-            in
-                div
-                    bounds
-                    [ ( "background-image", background )
-                    ]
-                    []
-                    []
+    let
+        background = "url(" ++ src ++ ")"
+
+        render =
+            div
+                [ ( "background-image", background ) ]
+                []
+                []
+    in
+        Custom.html render
 
 
 {-| An image cropped to a specific region of the source image.
@@ -143,7 +143,7 @@ The cropped region will be scaled to fill the bounds that this element renders i
 -}
 croppedImage : Float -> Float -> Image -> Float -> Float -> Float -> Float -> Layout
 croppedImage sw sh src iw ih ix iy =
-    Layout
+    Custom.html
         <| \bounds ->
             let
                 { w, h } = bounds
@@ -157,12 +157,12 @@ croppedImage sw sh src iw ih ix iy =
                 size = (toString (sw * w / iw)) ++ "px " ++ (toString (sh * h / ih)) ++ "px"
             in
                 div
-                    bounds
                     [ ( "background", background )
                     , ( "background-size", size )
                     ]
                     []
                     []
+                    bounds
 
 
 
@@ -177,14 +177,12 @@ croppedImage sw sh src iw ih ix iy =
 -}
 fill : Color -> Layout
 fill c =
-    Layout
-        <| \bounds ->
-            div
-                bounds
-                [ ( "background-color", colorToString c )
-                ]
-                []
-                []
+    Custom.html
+        <| div
+            [ ( "background-color", colorToString c )
+            ]
+            []
+            []
 
 
 
@@ -194,7 +192,7 @@ fill c =
 --position : Float -> Float -> Float -> Float -> Layout -> Layout
 --position x y w h g =
 --    Layout <| \bounds ->
---        toHtml' {x=x,y=y,w=w,h=h} g
+--        Core.toHtml {x=x,y=y,w=w,h=h} g
 
 
 {-| A container element that inserts padding around its child
@@ -205,10 +203,14 @@ fill c =
         ]
 -}
 inset : Float -> Layout -> Layout
-inset i g =
-    Layout
+inset i =
+    Core.mapBounds
         <| \bounds ->
-            toHtml' { x = bounds.x + i, y = bounds.y + i, w = bounds.w - i - i, h = bounds.h - i - i } g
+            { x = bounds.x + i
+            , w = bounds.w - i - i
+            , y = bounds.y + i
+            , h = bounds.h - i - i
+            }
 
 
 {-| Position two elements vertically, with the first element taking a given height
@@ -219,15 +221,15 @@ inset i g =
 -}
 top : Float -> Layout -> Layout -> Layout
 top ih a b =
-    Layout
+    Custom.html
         <| \bounds ->
             div
-                bounds
                 []
                 []
-                [ toHtml' { x = 0, w = bounds.w, y = 0, h = ih } a
-                , toHtml' { x = 0, w = bounds.w, y = ih, h = bounds.h - ih } b
+                [ Core.toHtml { x = 0, w = bounds.w, y = 0, h = ih } a
+                , Core.toHtml { x = 0, w = bounds.w, y = ih, h = bounds.h - ih } b
                 ]
+                bounds
 
 
 {-| Makes a a centered area with width equal to height
@@ -235,8 +237,8 @@ top ih a b =
     Layout.square (Layout.placeholder "square content")
 -}
 square : Layout -> Layout
-square child =
-    Layout
+square =
+    Core.mapBounds
         <| \bounds ->
             let
                 size = min bounds.w bounds.h
@@ -245,7 +247,7 @@ square child =
 
                 y = (bounds.h - size) / 2
             in
-                toHtml' { x = x, w = size, y = y, h = size } child
+                { x = x, w = size, y = y, h = size }
 
 
 {-| An element that renders a list of children into bounds of a given size and
@@ -255,27 +257,25 @@ lays them out in a left-to-right flow that wraps at this element's bounds
 -}
 flow : ( Float, Float ) -> List Layout -> Layout
 flow ( iw, ih ) items =
-    Layout
-        <| \bounds ->
-            div
-                bounds
-                [ ( "overflow", "auto" ) ]
-                []
-                (List.map
-                    (\i ->
-                        Html.div
-                            [ Html.style
-                                [ ( "position", "relative" )
-                                , ( "width", (toString iw) ++ "px" )
-                                , ( "height", (toString ih) ++ "px" )
-                                , ( "display", "inline-block" )
-                                , ( "vertical-align", "bottom" )
-                                ]
+    Custom.html
+        <| div
+            [ ( "overflow", "auto" ) ]
+            []
+            (List.map
+                (\i ->
+                    Html.div
+                        [ Html.style
+                            [ ( "position", "relative" )
+                            , ( "width", (toString iw) ++ "px" )
+                            , ( "height", (toString ih) ++ "px" )
+                            , ( "display", "inline-block" )
+                            , ( "vertical-align", "bottom" )
                             ]
-                            [ toHtml' { x = 0, y = 0, w = iw, h = ih } i ]
-                    )
-                    items
+                        ]
+                        [ Core.toHtml { x = 0, y = 0, w = iw, h = ih } i ]
                 )
+                items
+            )
 
 
 {-| An element that renders a list of children on top of one another in the same bounds.
@@ -287,11 +287,11 @@ flow ( iw, ih ) items =
 -}
 stack : List Layout -> Layout
 stack items =
-    Layout
+    Custom.html
         <| \bounds ->
             items
-                |> List.map (toHtml' { bounds | x = 0, y = 0 })
-                |> div bounds [] []
+                |> List.map (Core.toHtml { bounds | x = 0, y = 0 })
+                |> \x -> div [] [] x bounds
 
 
 {-| An element that renders a list of children in a vertical list with a given height.
@@ -302,9 +302,9 @@ The list will scroll vertically if there are enough children to exceed the verti
 -}
 list : Float -> List Layout -> Layout
 list ih items =
-    Layout
+    Custom.html
         <| \bounds ->
-            toHtml' bounds (flow ( bounds.w, ih ) items)
+            Core.toHtml bounds (flow ( bounds.w, ih ) items)
 
 
 
@@ -317,26 +317,19 @@ list ih items =
 -}
 onClick : Signal.Message -> Layout -> Layout
 onClick message item =
-    Layout
+    Custom.html
         <| \bounds ->
             div
-                bounds
                 []
                 [ Html.on "click" Json.value (\_ -> message) ]
-                [ toHtml' { bounds | x = 0, y = 0 } item ]
+                [ Core.toHtml { bounds | x = 0, y = 0 } item ]
+                bounds
 
 
 
 --
 -- Integration
 --
-
-
-toHtml' : Bounds -> Layout -> Html
-toHtml' bounds g =
-    case g of
-        Layout fn ->
-            fn bounds
 
 
 {-| Render a Layout to Html.
@@ -346,7 +339,7 @@ toHtml' bounds g =
 -}
 toHtml : ( Int, Int ) -> Layout -> Html
 toHtml ( w, h ) =
-    toHtml' { x = 0, y = 0, w = toFloat w, h = toFloat h }
+    Core.toHtml { x = 0, y = 0, w = toFloat w, h = toFloat h }
 
 
 {-| Simplifies rendering an element to fill the window.
