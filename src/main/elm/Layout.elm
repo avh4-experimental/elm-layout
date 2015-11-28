@@ -1,4 +1,4 @@
-module Layout (Layout, text, placeholder, image, croppedImage, fill, inset, top, flow, stack, list, onClick, toHtml, toFullWindow) where
+module Layout (Layout, text, placeholder, image, croppedImage, fill, inset, top, square, flow, stack, list, onClick, toHtml, toFullWindow) where
 
 {-| An experimental alternative to Graphics.Element and elm-html
 
@@ -228,6 +228,24 @@ top ih a b =
                 [ toHtml' { x = 0, w = bounds.w, y = 0, h = ih } a
                 , toHtml' { x = 0, w = bounds.w, y = ih, h = bounds.h - ih } b
                 ]
+
+
+{-| Makes a a centered area with width equal to height
+
+    Layout.square (Layout.placeholder "square content")
+-}
+square : Layout -> Layout
+square child =
+    Layout
+        <| \bounds ->
+            let
+                size = min bounds.w bounds.h
+
+                x = (bounds.w - size) / 2
+
+                y = (bounds.h - size) / 2
+            in
+                toHtml' { x = x, w = size, y = y, h = size } child
 
 
 {-| An element that renders a list of children into bounds of a given size and
