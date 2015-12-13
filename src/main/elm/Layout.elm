@@ -373,7 +373,7 @@ onClick message item =
     Custom.html
         <| \bounds ->
             div
-                []
+                [ ("cursor", "pointer") ]
                 [ Html.on "click" Json.value (\_ -> message) ]
                 [ Core.toHtml { bounds | x = 0, y = 0 } item ]
                 bounds
