@@ -104,10 +104,19 @@ to implement at a later time.
 -}
 placeholder : String -> Layout
 placeholder s =
-    stack
-        [ fill (Color.Hash.fromString s)
-        , text { size = 12, color = Color.darkCharcoal } s
-        ]
+    Custom.html
+        <| div
+            [ ("background-color", "#eee")
+            , ("border", "1px solid #ccc")
+            , ("box-sizing", "border-box")
+            , ("color", "#aaa")
+            , ("text-align", "center")
+            , ("display", "flex")
+            , ("justify-content", "center")
+            , ("flex-direction", "column")
+            ]
+            []
+            [ Html.text s ]
 
 
 {-| An element that renders text with a given style.
