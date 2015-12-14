@@ -1,4 +1,4 @@
-module Layout (Layout, text, placeholder, image, croppedImage, svg, fill, inset, top, square, flow, stack, list, onClick, toHtml, toFullWindow, center) where
+module Layout (Layout, text, placeholder, image, croppedImage, svg, fill, inset, top, bottom, square, flow, stack, list, onClick, toHtml, toFullWindow, center) where
 
 {-| An experimental alternative to Graphics.Element and elm-html
 
@@ -16,7 +16,7 @@ It also provides a mechanism for creating reusable layout logic.
 
 ## Positioning
 
-@docs inset, top, center, square
+@docs inset, top, bottom, center, square
 
 ## Lists
 
@@ -269,6 +269,25 @@ top ih a b =
                 []
                 [ Core.toHtml { x = 0, w = bounds.w, y = 0, h = ih } a
                 , Core.toHtml { x = 0, w = bounds.w, y = ih, h = bounds.h - ih } b
+                ]
+                bounds
+
+
+{-| Position two elements vertically, with the first element taking a given height
+
+    Layout.bottom 50
+        (Layout.placeholder "footer")
+        (Layout.placeholder "content")
+-}
+bottom : Float -> Layout -> Layout -> Layout
+bottom ih a b =
+    Custom.html
+        <| \bounds ->
+            div
+                []
+                []
+                [ Core.toHtml { x = 0, w = bounds.w, y = 0, h = bounds.h - ih } b
+                , Core.toHtml { x = 0, w = bounds.w, y = bounds.h - ih, h = ih } a
                 ]
                 bounds
 
