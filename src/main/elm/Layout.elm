@@ -102,7 +102,7 @@ to implement at a later time.
         (Layout.placeholder "header")
         (Layout.placeholder "content")
 -}
-placeholder : String -> Layout
+placeholder : anything -> Layout
 placeholder s =
     Custom.html
         <| div
@@ -116,7 +116,7 @@ placeholder s =
             , ("flex-direction", "column")
             ]
             []
-            [ Html.text s ]
+            [ Html.text <| toString s ]
 
 
 {-| An element that renders text with a given style.
