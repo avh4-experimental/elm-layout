@@ -1,4 +1,4 @@
-module Layout (Layout, text, placeholder, image, croppedImage, svg, fill, inset, top, bottom, square, flow, stack, list, onClick, toHtml, toFullWindow, center) where
+module Layout (Layout, text, placeholder, image, croppedImage, svg, fill, inset, top, bottom, left, right, square, flow, stack, list, onClick, toHtml, toFullWindow, center) where
 
 {-| An experimental alternative to Graphics.Element and elm-html
 
@@ -16,7 +16,7 @@ It also provides a mechanism for creating reusable layout logic.
 
 ## Positioning
 
-@docs inset, top, bottom, center, square
+@docs inset, top, bottom, left, right, center, square
 
 ## Lists
 
@@ -261,6 +261,19 @@ inset i =
         }
 
 
+split : (RectangularBounds -> RectangularBounds) -> (RectangularBounds -> RectangularBounds) -> Layout -> Layout -> Layout
+split aBounds bBounds a b =
+  Custom.html
+    <| \bounds ->
+        div
+          []
+          []
+          [ Core.toHtml (aBounds bounds) a
+          , Core.toHtml (bBounds bounds) b
+          ]
+          bounds
+
+
 {-| Position two elements vertically, with the first element taking a given height
 
     Layout.top 50
@@ -268,16 +281,10 @@ inset i =
         (Layout.placeholder "content")
 -}
 top : Float -> Layout -> Layout -> Layout
-top ih a b =
-  Custom.html
-    <| \bounds ->
-        div
-          []
-          []
-          [ Core.toHtml { x = 0, w = bounds.w, y = 0, h = ih } a
-          , Core.toHtml { x = 0, w = bounds.w, y = ih, h = bounds.h - ih } b
-          ]
-          bounds
+top ih =
+  split
+    (\bounds -> { x = 0, w = bounds.w, y = 0, h = ih })
+    (\bounds -> { x = 0, w = bounds.w, y = ih, h = bounds.h - ih })
 
 
 {-| Position two elements vertically, with the first element taking a given height
@@ -287,16 +294,36 @@ top ih a b =
         (Layout.placeholder "content")
 -}
 bottom : Float -> Layout -> Layout -> Layout
-bottom ih a b =
-  Custom.html
-    <| \bounds ->
-        div
-          []
-          []
-          [ Core.toHtml { x = 0, w = bounds.w, y = 0, h = bounds.h - ih } b
-          , Core.toHtml { x = 0, w = bounds.w, y = bounds.h - ih, h = ih } a
-          ]
-          bounds
+bottom ih =
+  split
+    (\bounds -> { x = 0, w = bounds.w, y = bounds.h - ih, h = ih })
+    (\bounds -> { x = 0, w = bounds.w, y = 0, h = bounds.h - ih })
+
+
+{-| Position two elements horizontally, with the first element taking a given height
+
+    Layout.left 50
+        (Layout.placeholder "left side")
+        (Layout.placeholder "content")
+-}
+left : Float -> Layout -> Layout -> Layout
+left iw =
+  split
+    (\bounds -> { x = 0, w = iw, y = 0, h = bounds.h })
+    (\bounds -> { x = iw, w = bounds.w - iw, y = 0, h = bounds.h })
+
+
+{-| Position two elements horizontally, with the first element taking a given height
+
+    Layout.right 50
+        (Layout.placeholder "right side")
+        (Layout.placeholder "content")
+-}
+right : Float -> Layout -> Layout -> Layout
+right iw =
+  split
+    (\bounds -> { x = bounds.w - iw, w = iw, y = 0, h = bounds.h })
+    (\bounds -> { x = 0, w = bounds.w - iw, y = 0, h = bounds.h })
 
 
 {-| Makes a centered area of a size that is calculated with the given function.
