@@ -9,9 +9,9 @@ import Layout.Core as Core exposing (Layout)
 
 
 type alias RectangularBounds =
-    { x : Float, y : Float, w : Float, h : Float }
+  { x : Float, y : Float, w : Float, h : Float }
 
 
 html : (RectangularBounds -> Html) -> Layout RectangularBounds
 html render =
-    Core.custom render
+  Core.custom render
