@@ -1,4 +1,24 @@
-module Layout.Circular (canvas, fill, rotate, slice) where
+module Layout.Circular (CircularLayout, canvas, fill, rotate, slice) where
+
+{-| Circular layouts
+
+This module is similar to `Layout`, but provides an API for creating layouts that are elliptical instead of rectangular.  The bounds for each element is `{ a0, a1, r0, r1 }`, representing the lower and upper angle and the lower and upper radius for the region.
+
+@docs CircularLayout
+
+## Integration
+
+@docs canvas
+
+## Basic Elements
+
+@docs fill
+
+## Positioning
+
+@docs rotate, slice
+
+-}
 
 import Color exposing (Color)
 import Layout.Core as Core
@@ -28,10 +48,14 @@ type alias CircularBounds =
   }
 
 
+{-| A graphical element that will be rendered into a particular circular bounds at a later time.
+-}
 type CircularLayout
   = CircularLayout (CircularBounds -> Svg)
 
 
+{-| Create a `Layout` that renders a CiruclarLayout within an ellipse filling its bounds.
+-}
 canvas : CircularLayout -> Layout.Layout
 canvas (CircularLayout child) =
   Core.custom
@@ -104,6 +128,8 @@ fill c =
 --
 
 
+{-| Shift the angle of a child
+-}
 rotate : Float -> CircularLayout -> CircularLayout
 rotate deg (CircularLayout child) =
   CircularLayout
@@ -111,6 +137,8 @@ rotate deg (CircularLayout child) =
         child { a0 = a0 + deg, a1 = a1 + deg, r0 = r0, r1 = r1 }
 
 
+{-| Divide the region into multiple children by angle.
+-}
 slice : List ( Float, CircularLayout ) -> CircularLayout
 slice children =
   let
