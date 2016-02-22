@@ -1,5 +1,5 @@
 {
-    "version": "1.1.1",
+    "version": "2.0.0",
     "summary": "An experimental alternative to Graphics.Element and elm-html",
     "repository": "https://github.com/avh4-experimental/elm-layout.git",
     "license": "MIT",
