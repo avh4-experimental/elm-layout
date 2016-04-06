@@ -1,4 +1,4 @@
-module Layout (Layout, text, placeholder, image, tiledImage, croppedImage, svg, fill, inset, top, bottom, left, right, square, flow, stack, list, onClick, toHtml, toFullWindow, center) where
+module Layout (Layout, text, placeholder, image, tiledImage, croppedImage, svg, fill, inset, top, bottom, left, right, square, fixedWidth, flow, stack, list, onClick, toHtml, toFullWindow, center) where
 
 {-| An experimental alternative to Graphics.Element and elm-html
 
@@ -16,7 +16,7 @@ It also provides a mechanism for creating reusable layout logic.
 
 ## Positioning
 
-@docs inset, top, bottom, left, right, center, square
+@docs inset, top, bottom, left, right, center, square, fixedWidth
 
 ## Lists
 
@@ -371,7 +371,7 @@ center mapSize =
           Debug.log "center" { x = bounds.x + x, y = bounds.y + y, w = w, h = h }
 
 
-{-| Makes a a centered area with width equal to height
+{-| Makes a centered area with width equal to height
 
     Layout.square (Layout.placeholder "square content")
 -}
@@ -384,6 +384,16 @@ square =
             min w h
         in
           { w = size, h = size }
+
+
+{-| Makes a centered area with a specific width.
+
+    Layout.placholder "my content"
+        |> Layout.fixedWidth 500
+-}
+fixedWidth : Float -> Layout -> Layout
+fixedWidth width =
+  center (\s -> { s | w = width })
 
 
 {-| An element that renders a list of children into bounds of a given size and

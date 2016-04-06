@@ -64,6 +64,10 @@ view =
         , Layout.fill Color.darkGray
             |> Layout.square
         )
+      , ( "fixedWidth"
+        , Layout.fill Color.darkGray
+            |> Layout.fixedWidth 200
+        )
       ]
     )
   , ( "Lists"
