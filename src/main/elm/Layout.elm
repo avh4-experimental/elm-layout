@@ -42,6 +42,7 @@ import Layout.Custom as Custom
 import Layout.Core as Core
 import Svg exposing (Svg)
 import Svg.Attributes as Svg
+import Svg.Attributes
 import Window
 
 
@@ -198,7 +199,8 @@ svg viewBox child =
         []
         []
         [ Svg.svg
-            [ Svg.version "1.1"
+            [ Svg.Attributes.style "width: 100%; height: 100%"
+            , Svg.version "1.1"
             , Svg.viewBox
                 (toString viewBox.x
                   ++ " "
