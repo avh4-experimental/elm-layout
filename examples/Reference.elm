@@ -35,14 +35,67 @@ view =
         )
       ]
     )
+  , ( "Positioning"
+    , [ ( "inset"
+        , Layout.fill Color.darkGray
+            |> Layout.inset 20
+        )
+      , ( "top"
+        , Layout.fill Color.darkGray
+            |> Layout.top 25 (Layout.fill Color.darkOrange)
+        )
+      , ( "bottom"
+        , Layout.fill Color.darkGray
+            |> Layout.bottom 25 (Layout.fill Color.darkOrange)
+        )
+      , ( "left"
+        , Layout.fill Color.darkGray
+            |> Layout.left 25 (Layout.fill Color.darkOrange)
+        )
+      , ( "right"
+        , Layout.fill Color.darkGray
+            |> Layout.right 25 (Layout.fill Color.darkOrange)
+        )
+      , ( "center"
+        , Layout.fill Color.darkGray
+            |> Layout.center (always { w = 200, h = 50 })
+        )
+      , ( "square"
+        , Layout.fill Color.darkGray
+            |> Layout.square
+        )
+      ]
+    )
+  , ( "Lists"
+    , [ ( "flow"
+        , [ Color.darkRed, Color.darkOrange, Color.darkYellow, Color.darkGreen, Color.darkBlue, Color.darkPurple ]
+            |> List.map Layout.fill
+            |> Layout.flow ( 120, 60 )
+        )
+      , ( "stack"
+        , Layout.stack
+            [ Layout.text { size = 60, color = Color.rgba 30 0 0 0.5 } "lazy"
+            , Layout.text { size = 60, color = Color.rgba 0 30 0 0.5 } "brown"
+            , Layout.text { size = 60, color = Color.rgba 0 0 30 0.5 } "fox"
+            ]
+        )
+      , ( "list"
+        , [1..50]
+            |> List.map (toString >> Layout.text { size = 8, color = Color.darkCharcoal })
+            |> Layout.list 10
+        )
+      ]
+    )
   ]
     |> List.map section
     |> List.concat
     |> Layout.list 100
 
-section : (String, List (String, Layout)) -> List Layout
-section (name, examples) =
+
+section : ( String, List ( String, Layout ) ) -> List Layout
+section ( name, examples ) =
   (Layout.placeholder name) :: (List.map example examples)
+
 
 example : ( String, Layout ) -> Layout
 example ( name, layout ) =
