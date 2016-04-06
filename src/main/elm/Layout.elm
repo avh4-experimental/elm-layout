@@ -1,4 +1,4 @@
-module Layout (Layout, text, placeholder, image, croppedImage, svg, fill, inset, top, bottom, left, right, square, flow, stack, list, onClick, toHtml, toFullWindow, center) where
+module Layout (Layout, text, placeholder, image, tiledImage, croppedImage, svg, fill, inset, top, bottom, left, right, square, flow, stack, list, onClick, toHtml, toFullWindow, center) where
 
 {-| An experimental alternative to Graphics.Element and elm-html
 
@@ -12,7 +12,7 @@ It also provides a mechanism for creating reusable layout logic.
 
 ## Basic elements
 
-@docs placeholder, text, image, croppedImage, svg, fill
+@docs placeholder, text, image, tiledImage, croppedImage, svg, fill
 
 ## Positioning
 
@@ -137,12 +137,33 @@ text style s =
         [ Html.text s ]
 
 
-{-| An element that renders an image.
+{-| An element that renders an image, stretched to fill the bounds.
 
     Layout.image "mario.png"
 -}
 image : Image -> Layout
 image src =
+  let
+    render =
+      div
+        []
+        []
+        [ Html.img
+            [ Html.src src
+            , Html.style [ ( "width", "100%" ), ( "height", "100%" ) ]
+            ]
+            []
+        ]
+  in
+    Custom.html render
+
+
+{-| An element that renders an image tiled to fill the bounds.
+
+    Layout.tiledImage "background-tile.png"
+-}
+tiledImage : Image -> Layout
+tiledImage src =
   let
     background =
       "url(" ++ src ++ ")"
