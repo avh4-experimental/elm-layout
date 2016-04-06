@@ -71,7 +71,10 @@ colorToString c =
     { red, green, blue, alpha } =
       Color.toRgb c
   in
-    "rgb(" ++ (toString red) ++ ", " ++ (toString green) ++ ", " ++ (toString blue) ++ ")"
+    if alpha == 1.0 then
+      "rgb(" ++ (toString red) ++ ", " ++ (toString green) ++ ", " ++ (toString blue) ++ ")"
+    else
+      "rgba(" ++ (toString red) ++ ", " ++ (toString green) ++ ", " ++ (toString blue) ++ ", " ++ (toString alpha) ++ ")"
 
 
 div styles attrs children { x, w, y, h } =
