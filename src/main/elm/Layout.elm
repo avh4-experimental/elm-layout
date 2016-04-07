@@ -552,9 +552,11 @@ toHtml ( w, h ) =
 toFullWindow : Signal Layout -> Signal Html
 toFullWindow viewSignal =
   Signal.map2 toHtml Window.dimensions viewSignal
+    |> Signal.map (\x -> Html.div [ Html.style [ ( "overflow", "hidden" ) ] ] [ x ])
 
 
 {-| -}
 toPage : Signal LayoutWithHeight -> Signal Html
 toPage viewSignal =
   Signal.map2 toHtmlWithHeight (Signal.map fst Window.dimensions) viewSignal
+    |> Signal.map (\x -> Html.div [ Html.style [ ( "overflow-x", "hidden" ) ] ] [ x ])
