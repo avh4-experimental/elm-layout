@@ -1,4 +1,4 @@
-module Layout (Layout, text, placeholder, image, tiledImage, croppedImage, svg, fill, inset, top, bottom, left, right, square, fixedWidth, flow, stack, list, onClick, toHtml, toFullWindow, center) where
+module Layout (Layout, blank, text, placeholder, image, tiledImage, croppedImage, svg, fill, withHeight, withBackground, inset, top, bottom, left, right, square, center, fixedWidth, sequence, flow, stack, list, onClick, toHtml, toFullWindow, toPage) where
 
 {-| An experimental alternative to Graphics.Element and elm-html
 
@@ -12,7 +12,11 @@ It also provides a mechanism for creating reusable layout logic.
 
 ## Basic elements
 
-@docs placeholder, text, image, tiledImage, croppedImage, svg, fill
+@docs blank, placeholder, text, image, tiledImage, croppedImage, svg, fill
+
+## LayoutWithHeight
+
+@docs withHeight, withBackground
 
 ## Positioning
 
@@ -20,7 +24,7 @@ It also provides a mechanism for creating reusable layout logic.
 
 ## Lists
 
-@docs flow, stack, list
+@docs sequence, flow, stack, list
 
 ## Events
 
@@ -28,7 +32,7 @@ It also provides a mechanism for creating reusable layout logic.
 
 ## Integration
 
-@docs toHtml, toFullWindow
+@docs toHtml, toFullWindow, toPage
 
 -}
 
@@ -40,10 +44,12 @@ import Html.Events as Html
 import Json.Decode as Json
 import Layout.Custom as Custom
 import Layout.Core as Core
+import Layout.Color
 import Svg exposing (Svg)
 import Svg.Attributes as Svg
 import Svg.Attributes
 import Window
+import Layout.Background as Background exposing (Background)
 
 
 type alias Image =
@@ -66,15 +72,8 @@ type alias Layout =
   Core.Layout RectangularBounds
 
 
-colorToString c =
-  let
-    { red, green, blue, alpha } =
-      Color.toRgb c
-  in
-    if alpha == 1.0 then
-      "rgb(" ++ (toString red) ++ ", " ++ (toString green) ++ ", " ++ (toString blue) ++ ")"
-    else
-      "rgba(" ++ (toString red) ++ ", " ++ (toString green) ++ ", " ++ (toString blue) ++ ", " ++ (toString alpha) ++ ")"
+type LayoutWithHeight
+  = LayoutWithHeight (Float -> Html)
 
 
 div styles attrs children { x, w, y, h } =
@@ -94,6 +93,13 @@ div styles attrs children { x, w, y, h } =
         ++ attrs
   in
     Html.div attrs' children
+
+
+{-| A blank element.
+-}
+blank : Layout
+blank =
+  fill (Color.rgba 0 0 0 0.0)
 
 
 {-| An element intended to be a placeholder for something that will be implemented at
@@ -129,12 +135,12 @@ placeholder s =
     Layout.text {size=32,color=Color.darkCharcoal} "Welcome"
 -}
 text : { size : Int, color : Color } -> String -> Layout
-text style s =
+text { size, color } s =
   Custom.html
     <| div
         [ ( "overflow", "auto" )
-        , ( "font-size", (toString style.size) ++ "px" )
-        , ( "color", colorToString style.color )
+        , ( "font-size", (toString size) ++ "px" )
+        , ( "color", Layout.Color.toString color )
         ]
         []
         [ Html.text s ]
@@ -253,7 +259,7 @@ fill : Color -> Layout
 fill c =
   Custom.html
     <| div
-        [ ( "background-color", colorToString c )
+        [ ( "background-color", Layout.Color.toString c )
         ]
         []
         []
@@ -263,6 +269,38 @@ fill c =
 --
 -- Layout
 --
+
+
+{-| -}
+withHeight : Float -> Layout -> LayoutWithHeight
+withHeight height layout =
+  LayoutWithHeight
+    (\width ->
+      Html.div
+        [ Html.style
+            [ ( "width", toString width ++ "px" )
+            , ( "height", toString height ++ "px" )
+            , ( "position", "relative" )
+            ]
+        ]
+        [ Core.toHtml { x = 0, y = 0, w = width, h = height } layout ]
+    )
+
+
+{-| -}
+withBackground : Background -> LayoutWithHeight -> LayoutWithHeight
+withBackground background (LayoutWithHeight layout) =
+  LayoutWithHeight
+    (\width ->
+      Html.div
+        [ Html.style [ ( "position", "relative" ) ] ]
+        [ Background.toHtml width background
+        , layout width
+        ]
+    )
+
+
+
 --position : Float -> Float -> Float -> Float -> Layout -> Layout
 --position x y w h g =
 --    Layout <| \bounds ->
@@ -396,6 +434,12 @@ fixedWidth width =
   center (\s -> { s | w = width })
 
 
+{-| -}
+sequence : List LayoutWithHeight -> LayoutWithHeight
+sequence items =
+  LayoutWithHeight (\width -> Html.div [] (items |> List.map (\(LayoutWithHeight layout) -> layout width)))
+
+
 {-| An element that renders a list of children into bounds of a given size and
 lays them out in a left-to-right flow that wraps at this element's bounds
 
@@ -478,6 +522,13 @@ onClick message item =
 --
 
 
+{-|
+-}
+toHtmlWithHeight : Int -> LayoutWithHeight -> Html
+toHtmlWithHeight w (LayoutWithHeight layout) =
+  layout (toFloat w)
+
+
 {-| Render a Layout to Html.
 
     view = Layout.placeholder "view"
@@ -496,3 +547,9 @@ toHtml ( w, h ) =
 toFullWindow : Signal Layout -> Signal Html
 toFullWindow viewSignal =
   Signal.map2 toHtml Window.dimensions viewSignal
+
+
+{-| -}
+toPage : Signal LayoutWithHeight -> Signal Html
+toPage viewSignal =
+  Signal.map2 toHtmlWithHeight (Signal.map fst Window.dimensions) viewSignal

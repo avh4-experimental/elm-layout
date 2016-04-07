@@ -8,6 +8,7 @@
     ],
     "exposed-modules": [
         "Layout",
+        "Layout.Background",
         "Layout.Circular",
         "Layout.StartApp"
     ],

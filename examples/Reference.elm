@@ -8,7 +8,10 @@ import Svg.Attributes as Svg
 
 view =
   [ ( "Basic elements"
-    , [ ( "placeholder"
+    , [ ( "blank"
+        , Layout.blank
+        )
+      , ( "placeholder"
         , Layout.placeholder { myValue = Ok 42 }
         )
       , ( "text"
