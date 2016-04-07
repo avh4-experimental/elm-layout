@@ -429,15 +429,18 @@ square =
     Layout.placholder "my content"
         |> Layout.fixedWidth 500
 -}
-fixedWidth : Float -> Layout -> Layout
-fixedWidth width =
-  center (\s -> { s | w = width })
+fixedWidth : Float -> LayoutWithHeight -> LayoutWithHeight
+fixedWidth width (LayoutWithHeight inner) =
+  LayoutWithHeight
+    <| \actualWidth ->
+        Html.div [ Html.style [ ( "margin", "0 auto" ), ( "width", toString width ++ "px" ) ] ] [ inner width ]
 
 
 {-| -}
 sequence : List LayoutWithHeight -> LayoutWithHeight
 sequence items =
-  LayoutWithHeight (\width -> Html.div [] (items |> List.map (\(LayoutWithHeight layout) -> layout width)))
+  LayoutWithHeight
+    <| \width -> Html.div [] (items |> List.map (\(LayoutWithHeight layout) -> layout width))
 
 
 {-| An element that renders a list of children into bounds of a given size and
