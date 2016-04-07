@@ -449,7 +449,9 @@ flow : ( Float, Float ) -> List Layout -> Layout
 flow ( iw, ih ) items =
   Custom.html
     <| div
-        [ ( "overflow", "auto" ) ]
+        [ ( "overflow-x", "hidden" )
+        , ( "overflow-y", "auto" )
+        ]
         []
         (List.map
           (\i ->
